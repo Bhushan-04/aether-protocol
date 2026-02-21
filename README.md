@@ -1,8 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VeritasStream 🔬📡
 
-## Getting Started
+**VeritasStream** is a decentralized news truth machine. It's an autonomous fact-checking pipeline designed to capture, verify, archive, and broadcast news claims using decentralized truth protocols. 
 
-First, run the development server:
+Built with **Next.js** (App Router), styled with **Tailwind CSS**, and powered by **Supabase** for data persistence and **Lighthouse** for decentralized web3 storage.
+
+---
+
+## 🚀 Features
+
+- **Claim Ingestion:** Submit any news claim or statement along with an optional source URL.
+- **AI-Powered Analysis Pipeline:** Once a claim is submitted, it enters an analysis queue (Pending -> Analyzing -> Verified/Debunked -> Broadcasted).
+- **Truth Scoring & Propaganda Flags:** Each claim receives a computed Truth Score (out of 100) and highlights detected propaganda techniques (e.g., Emotional manipulation, Straw man arguments).
+- **Decentralized Archiving:** Claims are tied to a Content Identifier (CID).
+- **Live Verification Feed:** A real-time, auto-polling dashboard showcasing the latest verified and debunked claims.
+- **Premium Dark UI:** Designed with a sleek, glowing glassmorphism aesthetic.
+
+---
+
+## 🛠 Tech Stack
+
+- **Framework:** [Next.js 15+](https://nextjs.org/) (React 19)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) & Custom Vanilla CSS (Glassmorphism & animations)
+- **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
+- **Web3 Storage:** [Lighthouse Web3 SDK](https://www.lighthouse.storage/)
+- **Icons & Fonts:** Custom SVGs, `next/font/google` (Inter)
+
+---
+
+## 🖥 Getting Started
+
+### Prerequisites
+
+Make sure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Bhushan-04/nocap-ai.git
+cd nocap-ai
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### 3. Environment Variables
+
+Create a `.env.local` file in the root directory and add your Supabase and Lighthouse credentials:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# Add other required API keys for Lighthouse and your AI pipeline
+```
+
+*Note: `.env.local` is ignored by git to keep your secrets safe.*
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
@@ -10,27 +70,34 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the live feed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🗄 Database Schema
 
-## Learn More
+The application expects a `claims` table in Supabase. You can find the raw SQL schema needed to set this up in `supabase_schema.sql` at the root of the project.
 
-To learn more about Next.js, take a look at the following resources:
+```sql
+CREATE TABLE IF NOT EXISTS claims (
+    id UUID PRIMARY KEY,
+    claim_text TEXT NOT NULL,
+    source_url TEXT,
+    cid TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('PENDING', 'ANALYZING', 'VERIFIED', 'DEBUNKED', 'BROADCASTED')),
+    analysis_results JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🤝 Contributing
 
-## Deploy on Vercel
+Contributions, issues, and feature requests are welcome!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Phase 2: Live Pipeline • Decentralized • Built for Truth*
