@@ -417,8 +417,8 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
-            <span className="gradient-text animate-gradient">Veritas</span>
-            <span style={{ color: "var(--vs-text-primary)" }}>Stream</span>
+            <span className="gradient-text animate-gradient">nocap</span>
+            <span style={{ color: "var(--vs-text-primary)" }}>-ai</span>
           </h1>
 
           <p
@@ -508,7 +508,7 @@ export default function Home() {
         }}
       >
         <p>
-          <span className="gradient-text font-semibold">VeritasStream</span> —
+          <span className="gradient-text font-semibold">nocap-ai</span> —
           Decentralized News Truth Machine
         </p>
         <p className="mt-1">Phase 2: Live Pipeline • Decentralized • Built for Truth</p>

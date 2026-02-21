@@ -1,4 +1,4 @@
--- Supabase Schema for VeritasStream Claims
+-- Supabase Schema for nocap-ai Claims
 CREATE TABLE IF NOT EXISTS claims (
     id UUID PRIMARY KEY,
     claim_text TEXT NOT NULL,

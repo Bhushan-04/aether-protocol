@@ -1,4 +1,4 @@
-// VeritasStream — Core Type Definitions
+// nocap-ai — Core Type Definitions
 
 export type ClaimStatus =
   | "PENDING"

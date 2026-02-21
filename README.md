@@ -1,6 +1,6 @@
-# VeritasStream 🔬📡
+# nocap-ai 🔬📡
 
-**VeritasStream** is a decentralized news truth machine. It's an autonomous fact-checking pipeline designed to capture, verify, archive, and broadcast news claims using decentralized truth protocols. 
+**nocap-ai** is a decentralized news truth machine. It's an autonomous fact-checking pipeline designed to capture, verify, archive, and broadcast news claims using decentralized truth protocols. 
 
 Built with **Next.js** (App Router), styled with **Tailwind CSS**, and powered by **Supabase** for data persistence and **Lighthouse** for decentralized web3 storage.
 

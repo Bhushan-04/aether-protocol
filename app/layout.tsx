@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VeritasStream — Decentralized News Truth Machine",
+  title: "nocap-ai — Decentralized News Truth Machine",
   description:
     "Autonomous fact-checking pipeline that captures, verifies, archives, and broadcasts news claims. Powered by decentralized truth.",
 };
