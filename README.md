@@ -1,62 +1,109 @@
-# Aether Protocol: The Self-Sovereign Autonomous Intelligence Agency
+# Aether Protocol: Self-Sovereign Zero-Knowledge Intelligence
 
-### The Elevator Pitch (One-Liner Hook)
-
-A decentralized protocol that enables autonomous AI agents to process highly sensitive data privately, combining the immutable storage of Filecoin with the secure, off-chain compute of Aether Protocol.
-
-### The Problem Statement (The "Why")
-
-We are facing the "AI Privacy Paradox." Individuals and enterprises want to use powerful autonomous agents to manage their finances, legal contracts, and medical records, but they cannot risk uploading this sensitive data to centralized black boxes like OpenAI. Current solutions force a compromise: give up your privacy for utility, or maintain privacy and lose access to state-of-the-art AI capability. We need a system where agents can reason over private data without ever "leaking" it.
-
-### The Solution (The "What")
-
-Aether Protocol is a Zero-Knowledge Intelligence framework. It decouples data storage from compute, ensuring that sensitive information rests on decentralized infrastructure and is only processed in ephemeral, secure environments.
-
-We move beyond simple chatbots to build true "economic agents" that can be trusted with confidential workflows because their operational integrity is cryptographically verifiable.
-
-### How it's Made (Technical Implementation)
-
-Our architecture follows a "Shared-Nothing" DePIN philosophy, leveraging the best of the Web3 stack:
-
-- **Zero-Friction Ingestion (The Edge):** We use **Cloudflare Workers** utilizing the **Lighthouse API** (based on [filecoin-upload-worker](file:///d:/Foto_Owl/filecoin-upload-worker/src/index.js)) to handle high-throughput file uploads. Data is instantly anchored to the **Filecoin Calibration Testnet**, providing a Web2-like user experience with Web3 persistence and cryptographically verifiable integrity.
-- **Event-Driven Orchestration (The Brain):** The Edge worker triggers an asynchronous event to the **OpenServ Agent Hub**. The orchestrator receives the IPFS CID and metadata but does NOT see the raw data, routing tasks to specialized sub-agents via secure webhooks.
-- **Private Compute (The Vault):** The actual inference happens on **Aether Compute nodes** (Secure Enclaves). These ephemeral environments retrieve data directly from IPFS via CID, execute the **Knowledge Sub-Agent's Llama 3** model, return a "Security & Integrity Report" to the user, and immediately wipe all memory.
-
-### Why This Wins (Unique Value)
-
-Unlike standard AI wrappers, Aether is a foundational protocol for Verifiable, Private Autonomous Agents. We are solving the critical infrastructure gap required for enterprises to finally adopt Web3 AI tools without compliance restraints. It is scalable, serverless, and privacy-preserving by design.
+Aether Protocol is a decentralized framework for autonomous AI agents to process sensitive data with cryptographically verifiable privacy. By decoupling data anchoring (Filecoin) from ephemeral compute (Aether Compute Nodes), the protocol ensures that confidential information remains private while remaining accessible to state-of-the-art intelligence models.
 
 ---
 
-## 🛠 Tech Stack
+## 🏗 System Architecture (HLD)
 
-- **Framework:** [Next.js 15+](https://nextjs.org/) (React 19)
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **Decentralized Storage:** Filecoin Calibration Testnet / IPFS (via Lighthouse API)
-- **Edge Layer:** Cloudflare Global Workers (Production Ingestion)
-- **Orchestration Layer:** OpenServ Agent Hub (Webhook Triggered Routing)
-- **Compute Layer:** Aether Compute Node (Local Llama 3 / Secure Enclave Simulation)
+The Aether Protocol architecture is designed for "Shared-Nothing" decentralization, ensuring no single point of data leakage.
 
-## 🖥 Getting Started
-
-### 1. Install dependencies
-
-```bash
-npm install
+```mermaid
+graph TD
+    User([User + Web3 Wallet]) -->|1. Signed Ingestion| Edge[Aether Edge: Cloudflare Worker]
+    Edge -->|2. Immutable Anchoring| Filecoin[(Filecoin/IPFS via Lighthouse)]
+    Edge -->|3. Event Trigger| Orchestrator[OpenServ Agent Hub]
+    Orchestrator -->|4. Task Delegation| Compute[Aether Compute Node: Secure Enclave]
+    Compute -->|5. Retrieval| Filecoin
+    Compute -->|6. ZK Inference| LLM[Local Llama 3]
+    LLM -->|7. Security Report| User
 ```
 
-### 2. Environment Variables
+---
 
+## 🔒 Technical Design (LLD)
+
+### Data Lifecycle & Orchestration Flow
+
+The following sequence diagram illustrates the low-level interaction between the protocol's core layers:
+
+```mermaid
+sequenceDiagram
+    participant U as User / Wallet
+    participant W as Cloudflare Edge (Worker)
+    participant S as Filecoin/Lighthouse
+    participant O as OpenServ Hub
+    participant C as Aether Compute Node (TEE)
+
+    U->>U: Generate Consent Signature
+    U->>W: POST /upload (File + Signature)
+    W->>W: Verify Self-Sovereign Consent
+    W->>S: multipart/form-data upload
+    S-->>W: 200 OK (CID)
+    W->>O: Webhook Trigger (CID + Metadata)
+    O->>C: POST /api/compute (Orchestration)
+    
+    rect rgb(20, 20, 40)
+        Note over C: Initialization (Secure Enclave)
+        C->>S: Fetch Ciphertext (Gateway Fallback)
+        S-->>C: Data Stream
+        C->>C: Local Llama 3 Inference
+        C->>U: Stream Result (Security & Integrity Report)
+        C->>C: Ephemeral Memory Wipe
+    end
+```
+
+---
+
+## 🛠 Core Components
+
+### 1. Autonomous Edge Ingestion
+The entry point of the protocol is an **Aether-Edge Worker** (Cloudflare Global Edge). It handles high-throughput bit-streams and performs permissionless anchoring to the **Filecoin Calibration Testnet** using the Lighthouse API.
+- **Protocol**: `multipart/form-data`
+- **Integrity**: Immediate CID generation for downstream tracing.
+
+### 2. Self-Sovereign Consent Layer
+All ingestion requests require a **cryptographic signature** (EIP-191/712). This ensures that the Aether Protocol only processes data explicitly authorized by the data owner's private key.
+
+### 3. Event-Driven Orchestration
+The **OpenServ Agent Hub** acts as the protocol's routing layer. It receives webhooks containing the CID and metadata, then delegates compute tasks to optimized sub-agents withoutever ever interacting with the raw data payload.
+
+### 4. Zero-Knowledge Private Compute
+Actual inference is executed on **Aether Compute Nodes** (Simulated Secure Enclaves). 
+- **Retrieval**: Multi-gateway IPFS fetch with exponential backoff.
+- **Inference**: Local **Llama 3** (via Ollama) performs zero-knowledge reasoning.
+- **Cleanup**: Ephemeral environment destruction and memory wiping post-inference.
+
+---
+
+## 💻 Tech Stack
+
+- **Frontend**: Next.js 15+ (React 19), Tailwind CSS v4
+- **Web3**: ConnectKit, WAGMI (Wallet Auth)
+- **Edge**: Cloudflare Workers (Lighthouse SDK Integration)
+- **Decentralized Storage**: Filecoin / IPFS
+- **Orchestration**: OpenServ AI Agent Hub
+- **Inference Engine**: Llama 3 (Local NoCap-AI Node)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Environment Configuration
 Create a `.env.local` file in the root directory:
-
 ```env
-LIGHTHOUSE_API_KEY=your_lighthouse_key_here
+LIGHTHOUSE_API_KEY=your_key
+NEXT_PUBLIC_CLOUDFLARE_WORKER_URL=your_worker_url
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
-### 3. Run the Development Server
-
+### 2. Development Setup
 ```bash
+# Install dependencies
+npm install
+
+# Run the Aether Protocol local node
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the live feed.
+The application will be available at `http://localhost:3000`.
