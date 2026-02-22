@@ -1,103 +1,62 @@
-# nocap-ai 🔬📡
+# Aether Protocol: The Self-Sovereign Autonomous Intelligence Agency
 
-**nocap-ai** is a decentralized news truth machine. It's an autonomous fact-checking pipeline designed to capture, verify, archive, and broadcast news claims using decentralized truth protocols. 
+### The Elevator Pitch (One-Liner Hook)
 
-Built with **Next.js** (App Router), styled with **Tailwind CSS**, and powered by **Supabase** for data persistence and **Lighthouse** for decentralized web3 storage.
+A decentralized protocol that enables autonomous AI agents to process highly sensitive data privately, combining the immutable storage of Filecoin with the secure, off-chain compute of Aether Protocol.
 
----
+### The Problem Statement (The "Why")
 
-## 🚀 Features
+We are facing the "AI Privacy Paradox." Individuals and enterprises want to use powerful autonomous agents to manage their finances, legal contracts, and medical records, but they cannot risk uploading this sensitive data to centralized black boxes like OpenAI. Current solutions force a compromise: give up your privacy for utility, or maintain privacy and lose access to state-of-the-art AI capability. We need a system where agents can reason over private data without ever "leaking" it.
 
-- **Claim Ingestion:** Submit any news claim or statement along with an optional source URL.
-- **AI-Powered Analysis Pipeline:** Once a claim is submitted, it enters an analysis queue (Pending -> Analyzing -> Verified/Debunked -> Broadcasted).
-- **Truth Scoring & Propaganda Flags:** Each claim receives a computed Truth Score (out of 100) and highlights detected propaganda techniques (e.g., Emotional manipulation, Straw man arguments).
-- **Decentralized Archiving:** Claims are tied to a Content Identifier (CID).
-- **Live Verification Feed:** A real-time, auto-polling dashboard showcasing the latest verified and debunked claims.
-- **Premium Dark UI:** Designed with a sleek, glowing glassmorphism aesthetic.
+### The Solution (The "What")
+
+Aether Protocol is a Zero-Knowledge Intelligence framework. It decouples data storage from compute, ensuring that sensitive information rests on decentralized infrastructure and is only processed in ephemeral, secure environments.
+
+We move beyond simple chatbots to build true "economic agents" that can be trusted with confidential workflows because their operational integrity is cryptographically verifiable.
+
+### How it's Made (Technical Implementation)
+
+Our architecture follows a "Shared-Nothing" DePIN philosophy, leveraging the best of the Web3 stack:
+
+- **Zero-Friction Ingestion (The Edge):** We use **Cloudflare Workers** utilizing the **Lighthouse API** (based on [filecoin-upload-worker](file:///d:/Foto_Owl/filecoin-upload-worker/src/index.js)) to handle high-throughput file uploads. Data is instantly anchored to the **Filecoin Calibration Testnet**, providing a Web2-like user experience with Web3 persistence and cryptographically verifiable integrity.
+- **Event-Driven Orchestration (The Brain):** The Edge worker triggers an asynchronous event to the **OpenServ Agent Hub**. The orchestrator receives the IPFS CID and metadata but does NOT see the raw data, routing tasks to specialized sub-agents via secure webhooks.
+- **Private Compute (The Vault):** The actual inference happens on **Aether Compute nodes** (Secure Enclaves). These ephemeral environments retrieve data directly from IPFS via CID, execute the **Knowledge Sub-Agent's Llama 3** model, return a "Security & Integrity Report" to the user, and immediately wipe all memory.
+
+### Why This Wins (Unique Value)
+
+Unlike standard AI wrappers, Aether is a foundational protocol for Verifiable, Private Autonomous Agents. We are solving the critical infrastructure gap required for enterprises to finally adopt Web3 AI tools without compliance restraints. It is scalable, serverless, and privacy-preserving by design.
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Framework:** [Next.js 15+](https://nextjs.org/) (React 19)
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) & Custom Vanilla CSS (Glassmorphism & animations)
-- **Database:** [Supabase](https://supabase.com/) (PostgreSQL)
-- **Web3 Storage:** [Lighthouse Web3 SDK](https://www.lighthouse.storage/)
-- **Icons & Fonts:** Custom SVGs, `next/font/google` (Inter)
-
----
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Decentralized Storage:** Filecoin Calibration Testnet / IPFS (via Lighthouse API)
+- **Edge Layer:** Cloudflare Global Workers (Production Ingestion)
+- **Orchestration Layer:** OpenServ Agent Hub (Webhook Triggered Routing)
+- **Compute Layer:** Aether Compute Node (Local Llama 3 / Secure Enclave Simulation)
 
 ## 🖥 Getting Started
 
-### Prerequisites
-
-Make sure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/Bhushan-04/nocap-ai.git
-cd nocap-ai
-```
-
-### 2. Install dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
 ```
 
-### 3. Environment Variables
+### 2. Environment Variables
 
-Create a `.env.local` file in the root directory and add your Supabase and Lighthouse credentials:
+Create a `.env.local` file in the root directory:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-# Add other required API keys for Lighthouse and your AI pipeline
+LIGHTHOUSE_API_KEY=your_lighthouse_key_here
 ```
 
-*Note: `.env.local` is ignored by git to keep your secrets safe.*
-
-### 4. Run the Development Server
+### 3. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the live feed.
-
----
-
-## 🗄 Database Schema
-
-The application expects a `claims` table in Supabase. You can find the raw SQL schema needed to set this up in `supabase_schema.sql` at the root of the project.
-
-```sql
-CREATE TABLE IF NOT EXISTS claims (
-    id UUID PRIMARY KEY,
-    claim_text TEXT NOT NULL,
-    source_url TEXT,
-    cid TEXT NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('PENDING', 'ANALYZING', 'VERIFIED', 'DEBUNKED', 'BROADCASTED')),
-    analysis_results JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
----
-
-*Phase 2: Live Pipeline • Decentralized • Built for Truth*

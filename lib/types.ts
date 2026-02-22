@@ -1,4 +1,4 @@
-// nocap-ai — Core Type Definitions
+// Aether Protocol — Core Type Definitions
 
 export type ClaimStatus =
   | "PENDING"

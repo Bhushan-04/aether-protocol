@@ -1,35 +1,8 @@
 @import "tailwindcss";
 
-/* =========================================
-   nocap-ai Design System — Dark Theme
-   ========================================= */
-
-:root {
-  --vs-bg-primary: #0a0a0f;
-  --vs-bg-secondary: #111118;
-  --vs-bg-card: rgba(17, 17, 24, 0.7);
-  --vs-bg-card-hover: rgba(25, 25, 35, 0.85);
-  --vs-border: rgba(255, 255, 255, 0.06);
-  --vs-border-hover: rgba(255, 255, 255, 0.12);
-
-  --vs-text-primary: #f0f0f5;
-  --vs-text-secondary: #8a8a9a;
-  --vs-text-muted: #5a5a6a;
-
-  --vs-accent-cyan: #00e5ff;
-  --vs-accent-green: #00e676;
-  --vs-accent-red: #ff1744;
-  --vs-accent-amber: #ffab00;
-  --vs-accent-purple: #b388ff;
-
-  --vs-glow-cyan: 0 0 20px rgba(0, 229, 255, 0.15);
-  --vs-glow-green: 0 0 20px rgba(0, 230, 118, 0.15);
-  --vs-glow-red: 0 0 20px rgba(255, 23, 68, 0.15);
-}
-
 @theme inline {
-  --color-background: var(--vs-bg-primary);
-  --color-foreground: var(--vs-text-primary);
+  --color-background: #030712;
+  --color-foreground: #cbd5e1;
   --font-sans: var(--font-inter);
 }
 
@@ -38,8 +11,8 @@
 }
 
 body {
-  background: var(--vs-bg-primary);
-  color: var(--vs-text-primary);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-inter, "Inter", system-ui, -apple-system, sans-serif);
   min-height: 100vh;
   overflow-x: hidden;
@@ -49,269 +22,20 @@ body {
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: var(--vs-bg-primary);
+  background: var(--color-background);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--vs-border);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--vs-border-hover);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* =========================================
-   Animations
-   ========================================= */
-
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scan-line {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 3s ease infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
-}
-
-.animate-scan {
-  animation: scan-line 2s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* =========================================
-   Glass Card
-   ========================================= */
-
-.glass-card {
-  background: var(--vs-bg-card);
-  border: 1px solid var(--vs-border);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card:hover {
-  background: var(--vs-bg-card-hover);
-  border-color: var(--vs-border-hover);
-  transform: translateY(-2px);
-}
-
-/* =========================================
-   Gradient Text
-   ========================================= */
-
-.gradient-text {
-  background: linear-gradient(135deg, var(--vs-accent-cyan), var(--vs-accent-green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gradient-text-danger {
-  background: linear-gradient(135deg, var(--vs-accent-red), var(--vs-accent-amber));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* =========================================
-   Status Badges
-   ========================================= */
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.status-pending {
-  background: rgba(255, 171, 0, 0.1);
-  color: var(--vs-accent-amber);
-  border: 1px solid rgba(255, 171, 0, 0.2);
-}
-
-.status-analyzing {
-  background: rgba(0, 229, 255, 0.1);
-  color: var(--vs-accent-cyan);
-  border: 1px solid rgba(0, 229, 255, 0.2);
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-.status-verified {
-  background: rgba(0, 230, 118, 0.1);
-  color: var(--vs-accent-green);
-  border: 1px solid rgba(0, 230, 118, 0.2);
-  box-shadow: var(--vs-glow-green);
-}
-
-.status-debunked {
-  background: rgba(255, 23, 68, 0.1);
-  color: var(--vs-accent-red);
-  border: 1px solid rgba(255, 23, 68, 0.2);
-  box-shadow: var(--vs-glow-red);
-}
-
-.status-broadcasted {
-  background: rgba(179, 136, 255, 0.1);
-  color: var(--vs-accent-purple);
-  border: 1px solid rgba(179, 136, 255, 0.2);
-}
-
-/* =========================================
-   Truth Score Bar
-   ========================================= */
-
-.truth-bar-track {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.truth-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 1s ease-out;
-}
-
-.truth-bar-high { background: linear-gradient(90deg, var(--vs-accent-green), var(--vs-accent-cyan)); }
-.truth-bar-medium { background: linear-gradient(90deg, var(--vs-accent-amber), var(--vs-accent-green)); }
-.truth-bar-low { background: linear-gradient(90deg, var(--vs-accent-red), var(--vs-accent-amber)); }
-
-/* =========================================
-   Background Pattern
-   ========================================= */
-
-.bg-grid-pattern {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* =========================================
-   Input Styling
-   ========================================= */
-
-.vs-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--vs-border);
-  border-radius: 12px;
-  padding: 14px 18px;
-  color: var(--vs-text-primary);
-  font-size: 15px;
-  transition: all 0.25s ease;
-  width: 100%;
-  outline: none;
-}
-
-.vs-input:focus {
-  border-color: rgba(0, 229, 255, 0.4);
-  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.vs-input::placeholder {
-  color: var(--vs-text-muted);
-}
-
-/* =========================================
-   Button Styling
-   ========================================= */
-
-.vs-btn-primary {
-  background: linear-gradient(135deg, var(--vs-accent-cyan), var(--vs-accent-green));
-  color: #0a0a0f;
-  font-weight: 700;
-  padding: 14px 32px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  letter-spacing: 0.02em;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.vs-btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 229, 255, 0.25);
-}
-
-.vs-btn-primary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.vs-btn-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* =========================================
-   Propaganda Flag Tag
-   ========================================= */
-
-.flag-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  background: rgba(255, 23, 68, 0.08);
-  color: var(--vs-accent-red);
-  border: 1px solid rgba(255, 23, 68, 0.15);
+.word-break {
+  word-break: break-all;
 }

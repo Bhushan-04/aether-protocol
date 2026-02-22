@@ -1,518 +1,354 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Claim, ClaimStatus } from "@/lib/types";
+import { useState, useCallback, useRef } from "react";
+import { ConnectKitButton } from "connectkit";
+import { useAccount, useSignMessage } from "wagmi";
 
-/* ───────────────────────────────────────────────
-   STATUS BADGE
-   ─────────────────────────────────────────────── */
-
-function StatusBadge({ status }: { status: ClaimStatus }) {
-  const map: Record<ClaimStatus, { label: string; cls: string; icon: string }> =
-  {
-    PENDING: { label: "Pending", cls: "status-pending", icon: "⏳" },
-    ANALYZING: { label: "Analyzing", cls: "status-analyzing", icon: "🔍" },
-    VERIFIED: { label: "Verified", cls: "status-verified", icon: "✅" },
-    DEBUNKED: { label: "Debunked", cls: "status-debunked", icon: "❌" },
-    BROADCASTED: {
-      label: "Broadcasted",
-      cls: "status-broadcasted",
-      icon: "📡",
-    },
-  };
-
-  const { label, cls, icon } = map[status] || map.PENDING;
-
-  return (
-    <span className={`status-badge ${cls}`}>
-      {icon} {label}
-    </span>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   TRUTH SCORE BAR
-   ─────────────────────────────────────────────── */
-
-function TruthScoreBar({ score }: { score: number }) {
-  const barClass =
-    score >= 65 ? "truth-bar-high" : score >= 40 ? "truth-bar-medium" : "truth-bar-low";
-
-  return (
-    <div className="flex items-center gap-3 w-full">
-      <div className="truth-bar-track flex-1">
-        <div
-          className={`truth-bar-fill ${barClass}`}
-          style={{ width: `${score}%` }}
-        />
-      </div>
-      <span
-        className="text-sm font-bold tabular-nums"
-        style={{
-          color:
-            score >= 65
-              ? "var(--vs-accent-green)"
-              : score >= 40
-                ? "var(--vs-accent-amber)"
-                : "var(--vs-accent-red)",
-        }}
-      >
-        {score}/100
-      </span>
-    </div>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   CLAIM CARD
-   ─────────────────────────────────────────────── */
-
-function ClaimCard({
-  claim,
-  index,
-}: {
-  claim: Claim;
-  index: number;
-}) {
-  const hasResults = claim.analysis_results && claim.status !== "PENDING" && claim.status !== "ANALYZING";
-
-  return (
-    <div
-      className="glass-card p-6 animate-fade-in-up"
-      style={{ animationDelay: `${index * 80}ms` }}
-    >
-      {/* Header Row */}
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-base leading-relaxed" style={{ color: "var(--vs-text-primary)" }}>
-            &ldquo;{claim.claim_text}&rdquo;
-          </p>
-          {claim.source_url && (
-            <a
-              href={claim.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-2 text-xs hover:underline"
-              style={{ color: "var(--vs-accent-cyan)" }}
-            >
-              🌐 {claim.source_url}
-            </a>
-          )}
-        </div>
-        <StatusBadge status={claim.status} />
-      </div>
-
-      {/* Meta Row */}
-      <div
-        className="flex flex-wrap items-center gap-4 text-xs mb-4"
-        style={{ color: "var(--vs-text-muted)" }}
-      >
-        <span>🆔 {claim.id.slice(0, 8)}...</span>
-        <span>🔗 {claim.cid}</span>
-        <span>🕐 {new Date(claim.created_at).toLocaleString()}</span>
-      </div>
-
-      {/* Analysis Results */}
-      {hasResults && claim.analysis_results && (
-        <div
-          className="pt-4 mt-4"
-          style={{ borderTop: "1px solid var(--vs-border)" }}
-        >
-          {/* Truth Score */}
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--vs-text-secondary)" }}>
-              Truth Score
-            </p>
-            <TruthScoreBar score={claim.analysis_results.truth_score} />
-          </div>
-
-          {/* Propaganda Flags */}
-          {claim.analysis_results.propaganda_flags.length > 0 && (
-            <div className="mb-4">
-              <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--vs-text-secondary)" }}>
-                🚩 Propaganda Flags
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {claim.analysis_results.propaganda_flags.map((flag, i) => (
-                  <span key={i} className="flag-tag">
-                    {flag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Summary */}
-          <div>
-            <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--vs-text-secondary)" }}>
-              📊 Analysis Summary
-            </p>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--vs-text-secondary)" }}>
-              {claim.analysis_results.summary}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Analyzing Shimmer */}
-      {claim.status === "ANALYZING" && (
-        <div className="mt-4 rounded-lg overflow-hidden" style={{ background: "rgba(255,255,255,0.02)" }}>
-          <div className="h-2 animate-shimmer" />
-          <p
-            className="text-xs text-center py-3"
-            style={{ color: "var(--vs-accent-cyan)" }}
-          >
-            🧠 AI Brain is analyzing this claim...
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   CLAIM INPUT FORM
-   ─────────────────────────────────────────────── */
-
-function ClaimInput({ onSubmit }: { onSubmit: () => void }) {
-  const [claimText, setClaimText] = useState("");
-  const [sourceUrl, setSourceUrl] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
-
-  // Auto-clear success feedback after 5 seconds
-  useEffect(() => {
-    if (feedback?.type === "success") {
-      const timer = setTimeout(() => setFeedback(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [feedback]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!claimText.trim() || submitting) return;
-
-    setSubmitting(true);
-    setFeedback(null);
-
-    try {
-      const res = await fetch("/api/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          claim_text: claimText,
-          source_url: sourceUrl || undefined,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setFeedback({
-          type: "success",
-          msg: `Claim ingested! CID: ${data.cid} — Verification starting...`,
-        });
-        setClaimText("");
-        setSourceUrl("");
-        onSubmit();
-      } else {
-        setFeedback({ type: "error", msg: data.error || "Submission failed" });
-      }
-    } catch {
-      setFeedback({ type: "error", msg: "Network error — please try again" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-2xl animate-float">🔬</span>
-        <h2 className="text-lg font-bold" style={{ color: "var(--vs-text-primary)" }}>
-          Submit a Claim for Verification
-        </h2>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label
-            htmlFor="claim-text"
-            className="block text-xs uppercase tracking-wider mb-2 font-medium"
-            style={{ color: "var(--vs-text-secondary)" }}
-          >
-            News Claim / Statement
-          </label>
-          <textarea
-            id="claim-text"
-            className="vs-input"
-            rows={3}
-            placeholder='e.g. "The government has banned all cryptocurrency trading effective immediately."'
-            value={claimText}
-            onChange={(e) => {
-              setClaimText(e.target.value);
-              if (feedback) setFeedback(null);
-            }}
-            onFocus={() => {
-              if (feedback) setFeedback(null);
-            }}
-            required
-            style={{ resize: "vertical", minHeight: "80px" }}
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="source-url"
-            className="block text-xs uppercase tracking-wider mb-2 font-medium"
-            style={{ color: "var(--vs-text-secondary)" }}
-          >
-            Source URL <span style={{ color: "var(--vs-text-muted)" }}>(optional)</span>
-          </label>
-          <input
-            id="source-url"
-            type="url"
-            className="vs-input"
-            placeholder="https://example.com/article"
-            value={sourceUrl}
-            onChange={(e) => {
-              setSourceUrl(e.target.value);
-              if (feedback) setFeedback(null);
-            }}
-            onFocus={() => {
-              if (feedback) setFeedback(null);
-            }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="vs-btn-primary w-full md:w-auto"
-          disabled={!claimText.trim() || submitting}
-        >
-          {submitting ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin">⚙️</span> Ingesting...
-            </span>
-          ) : (
-            "⚡ Verify Claim"
-          )}
-        </button>
-      </div>
-
-      {/* Feedback */}
-      {feedback && (
-        <div
-          className="mt-4 p-3 rounded-lg text-sm"
-          style={{
-            background:
-              feedback.type === "success"
-                ? "rgba(0, 230, 118, 0.08)"
-                : "rgba(255, 23, 68, 0.08)",
-            color:
-              feedback.type === "success"
-                ? "var(--vs-accent-green)"
-                : "var(--vs-accent-red)",
-            border: `1px solid ${feedback.type === "success"
-              ? "rgba(0, 230, 118, 0.2)"
-              : "rgba(255, 23, 68, 0.2)"
-              }`,
-          }}
-        >
-          {feedback.msg}
-        </div>
-      )}
-    </form>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   STATS BAR
-   ─────────────────────────────────────────────── */
-
-function StatsBar({ claims }: { claims: Claim[] }) {
-  const total = claims.length;
-  const verified = claims.filter((c) => c.status === "VERIFIED" || c.status === "BROADCASTED").length;
-  const debunked = claims.filter((c) => c.status === "DEBUNKED").length;
-  const analyzing = claims.filter(
-    (c) => c.status === "ANALYZING" || c.status === "PENDING"
-  ).length;
-
-  const stats = [
-    { label: "Total Claims", value: total, color: "var(--vs-accent-cyan)" },
-    { label: "Verified", value: verified, color: "var(--vs-accent-green)" },
-    { label: "Debunked", value: debunked, color: "var(--vs-accent-red)" },
-    { label: "Processing", value: analyzing, color: "var(--vs-accent-amber)" },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {stats.map((stat) => (
-        <div key={stat.label} className="glass-card p-4 text-center">
-          <p className="text-2xl font-bold tabular-nums" style={{ color: stat.color }}>
-            {stat.value}
-          </p>
-          <p className="text-xs mt-1" style={{ color: "var(--vs-text-muted)" }}>
-            {stat.label}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   MAIN PAGE
-   ─────────────────────────────────────────────── */
+type ProcessStage = "IDLE" | "EDGE_INGESTION" | "ANCHORING_FILECOIN" | "ORCHESTRATION" | "PRIVATE_COMPUTE" | "COMPLETED" | "ERROR";
 
 export default function Home() {
-  const [claims, setClaims] = useState<Claim[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [stage, setStage] = useState<ProcessStage>("IDLE");
+  const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [cid, setCid] = useState<string>("");
+  const [result, setResult] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isConnected, address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
 
-  const fetchClaims = useCallback(async () => {
-    try {
-      const res = await fetch("/api/claim");
-      const data = await res.json();
-      if (data.claims) {
-        setClaims(data.claims);
-      }
-    } catch (err) {
-      console.error("Failed to fetch claims:", err);
-    } finally {
-      setLoading(false);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelected(e.dataTransfer.files[0]);
     }
-  }, []);
+  };
 
-  // Initial fetch + polling every 2 seconds
-  useEffect(() => {
-    fetchClaims();
-    const interval = setInterval(fetchClaims, 2000);
-    return () => clearInterval(interval);
-  }, [fetchClaims]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileSelected(e.target.files[0]);
+    }
+  };
+
+  const handleFileSelected = (selectedFile: File) => {
+    // 127 bytes is the minimum for Synapse/Cloudflare Worker
+    if (selectedFile.size < 127) {
+      setErrorMsg("File too small. Minimum 127 bytes required for decentralized anchoring.");
+      return;
+    }
+    // < 5MB for demo
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setErrorMsg("File too large for demo. Please keep it under 5MB.");
+      return;
+    }
+    setFile(selectedFile);
+    setErrorMsg("");
+    setStage("IDLE");
+    setCid("");
+    setResult(null);
+  };
+
+  const resetAll = () => {
+    setFile(null);
+    setStage("IDLE");
+    setCid("");
+    setResult(null);
+    setErrorMsg("");
+  };
+
+  const startPipeline = async () => {
+    if (!file) return;
+    if (!isConnected) {
+      setErrorMsg("Please connect your wallet to authorize ingestion.");
+      return;
+    }
+
+    setStage("EDGE_INGESTION");
+    setErrorMsg("");
+
+    try {
+      // 0. Self-Sovereign Authorization (Cryptographic Signature)
+      console.log(`[Self-Sovereignty] Requesting signature from ${address}...`);
+      const signature = await signMessageAsync({
+        message: `Authorize Aether Protocol to process and anchor this sensitive data (Digest: ${file.name}-${file.size}).`,
+      });
+      console.log(`[Self-Sovereignty] Consent Verified. Signature: ${signature.slice(0, 20)}...`);
+      // 1. Production Edge Ingestion (Cloudflare Worker)
+      const workerUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL;
+      if (!workerUrl) throw new Error("Cloudflare Worker URL not configured in .env.local");
+
+      console.log(`[Aether-Edge] Routing ingestion to: ${workerUrl}`);
+      console.log(`[Aether-Edge] File: ${file.name}, Size: ${file.size}, User: ${address}`);
+
+      const uploadRes = await fetch(workerUrl, {
+        method: 'POST',
+        headers: {
+          'user-id': address || 'Aether-User',
+          'x-file-name': file.name
+        },
+        body: file // Direct binary stream supported by the worker
+      });
+
+      if (!uploadRes.ok) {
+        let errorDetail = "";
+        try {
+          const errorData = await uploadRes.json();
+          errorDetail = errorData.message || errorData.error || "";
+        } catch (e) {
+          // Fallback if not JSON
+        }
+        throw new Error(`Edge Ingestion failed (${uploadRes.status})${errorDetail ? ': ' + errorDetail : ''}.`);
+      }
+      const uploadData = await uploadRes.json();
+
+      setStage("ANCHORING_FILECOIN");
+      setCid(uploadData.cid);
+
+      // Brief pause for UI transition
+      await new Promise(r => setTimeout(r, 1000));
+
+      // 2. OpenServ Orchestration (Event Router)
+      setStage("ORCHESTRATION");
+      const orchRes = await fetch('/api/orchestrate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          event: 'FILE_ANCHORED',
+          cid: uploadData.cid,
+          metadata: { timestamp: new Date().toISOString() }
+        })
+      });
+
+      if (!orchRes.ok) throw new Error("Orchestration routing failed");
+      const orchData = await orchRes.json();
+
+      // Brief pause for UI transition
+      await new Promise(r => setTimeout(r, 1000));
+
+      // 3. Aether Compute (Secure Enclave)
+      setStage("PRIVATE_COMPUTE");
+      const computeRes = await fetch('/api/compute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          cid: uploadData.cid,
+          original_name: file.name
+        })
+      });
+
+      if (!computeRes.ok) throw new Error("Private compute failed");
+      const computeData = await computeRes.json();
+
+      // 4. Final Result Display
+      setResult(computeData.result);
+      setStage("COMPLETED");
+
+    } catch (err: any) {
+      setStage("ERROR");
+      setErrorMsg(err.message || "An error occurred during the pipeline.");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-grid-pattern">
-      {/* ── HERO ───────────────────────── */}
-      <header className="relative pt-16 pb-12 md:pt-24 md:pb-16 px-4">
-        {/* Background glow */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-20 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse, rgba(0,229,255,0.3), transparent 70%)",
-            filter: "blur(80px)",
-          }}
-        />
+    <div className="min-h-screen bg-[#030712] text-slate-300 font-sans selection:bg-purple-500/30">
+      {/* Background Glow */}
+      <div className="fixed inset-0 z-0 flex items-center justify-center opacity-30 pointer-events-none">
+        <div className="w-[800px] h-[800px] bg-purple-900/20 rounded-full blur-[120px]"></div>
+        <div className="w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[100px] absolute -top-20 -right-20"></div>
+      </div>
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-xs font-medium"
-            style={{
-              background: "rgba(0, 229, 255, 0.06)",
-              border: "1px solid rgba(0, 229, 255, 0.15)",
-              color: "var(--vs-accent-cyan)",
-            }}
-          >
-            <span className="animate-pulse-glow">●</span>
-            Decentralized Truth Protocol — Phase 2 (Live)
+      <div className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24">
+        {/* Header */}
+        <header className="text-center mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <div className="px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-medium tracking-wide">
+              ZK Intelligence Framework
+            </div>
+            <ConnectKitButton />
           </div>
-
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
-            <span className="gradient-text animate-gradient">nocap</span>
-            <span style={{ color: "var(--vs-text-primary)" }}>-ai</span>
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 text-white drop-shadow-lg">
+            Aether Protocol
           </h1>
-
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
-            style={{ color: "var(--vs-text-secondary)" }}
-          >
-            Autonomous fact-checking pipeline that captures, verifies, archives,
-            and broadcasts news claims.{" "}
-            <span className="gradient-text font-semibold">
-              Powered by decentralized truth.
-            </span>
+          <p className="max-w-2xl mx-auto text-lg text-slate-400">
+            The Self-Sovereign Autonomous Intelligence Agency. <br />
+            Process highly sensitive data privately. Immutable storage. Ephemeral compute.
           </p>
-        </div>
-      </header>
+        </header>
 
-      {/* ── MAIN CONTENT ──────────────── */}
-      <main className="max-w-4xl mx-auto px-4 pb-20 space-y-8">
-        {/* Claim Input */}
-        <section>
-          <ClaimInput onSubmit={fetchClaims} />
-        </section>
+        <main className="grid md:grid-cols-2 gap-10 items-start">
+          {/* LEFT: Upload Zone */}
+          <section className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Secure Data Ingestion
+            </h2>
 
-        {/* Stats */}
-        {claims.length > 0 && (
-          <section className="animate-fade-in-up">
-            <StatsBar claims={claims} />
-          </section>
-        )}
-
-        {/* Feed Header */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold" style={{ color: "var(--vs-text-primary)" }}>
-                📡 Verification Feed
-              </h2>
-              <span
-                className="text-xs px-2 py-1 rounded-full"
-                style={{
-                  background: "rgba(0, 229, 255, 0.06)",
-                  color: "var(--vs-accent-cyan)",
-                }}
+            {!file ? (
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center min-h-[250px]
+                  ${isDragging ? "border-purple-500 bg-purple-500/10" : "border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/50"}`}
               >
-                Live
-              </span>
-            </div>
-            {claims.length > 0 && (
-              <span className="text-xs" style={{ color: "var(--vs-text-muted)" }}>
-                {claims.length} claim{claims.length !== 1 ? "s" : ""} processed
-              </span>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                  <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p className="text-white font-medium text-lg mb-1">Upload Sensitive File</p>
+                <p className="text-sm text-slate-500">Drag & drop or click to browse</p>
+              </div>
+            ) : (
+              <div className="border border-slate-700 bg-slate-800/50 rounded-xl p-6 flex flex-col h-[250px]">
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <svg className="w-12 h-12 text-purple-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-white font-medium truncate max-w-[250px]">{file.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">{(file.size / 1024).toFixed(2)} KB</p>
+                </div>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={resetAll}
+                    className="flex-1 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-colors"
+                  >
+                    {stage === "COMPLETED" ? "New Ingestion" : "Reset"}
+                  </button>
+                  <button
+                    onClick={startPipeline}
+                    disabled={stage !== "IDLE"}
+                    className="flex-1 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm font-medium transition-all disabled:opacity-50 disabled:shadow-none font-semibold flex justify-center items-center gap-2"
+                  >
+                    {stage === "IDLE" ? "Deploy Agent Pipeline" : stage === "COMPLETED" ? "Inference Finalized" : "Processing..."}
+                  </button>
+                </div>
+              </div>
             )}
-          </div>
 
-          {/* Claims List */}
-          {loading ? (
-            <div className="glass-card p-12 text-center">
-              <p className="text-lg animate-pulse-glow" style={{ color: "var(--vs-accent-cyan)" }}>
-                ⏳ Loading claims...
-              </p>
-            </div>
-          ) : claims.length === 0 ? (
-            <div className="glass-card p-12 text-center">
-              <p className="text-4xl mb-4">🔬</p>
-              <p className="text-lg font-medium mb-2" style={{ color: "var(--vs-text-secondary)" }}>
-                No claims yet
-              </p>
-              <p className="text-sm" style={{ color: "var(--vs-text-muted)" }}>
-                Submit a news claim above to start the decentralized verification pipeline.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {claims.map((claim, i) => (
-                <ClaimCard key={claim.id} claim={claim} index={i} />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
+            {errorMsg && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
+                {errorMsg}
+              </div>
+            )}
+          </section>
 
-      {/* ── FOOTER ────────────────────── */}
-      <footer
-        className="text-center py-8 text-xs"
-        style={{
-          color: "var(--vs-text-muted)",
-          borderTop: "1px solid var(--vs-border)",
-        }}
-      >
-        <p>
-          <span className="gradient-text font-semibold">nocap-ai</span> —
-          Decentralized News Truth Machine
-        </p>
-        <p className="mt-1">Phase 2: Live Pipeline • Decentralized • Built for Truth</p>
-      </footer>
+          {/* RIGHT: Pipeline Orchestration & Results */}
+          <section className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col h-full">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Live Telemetry
+            </h2>
+
+            <div className="space-y-6 flex-1 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent flex flex-col justify-center">
+
+              <StepItem
+                title="1. Edge Ingestion"
+                desc="Cloudflare Worker securely receives bits"
+                status={stage === "IDLE" ? "pending" : ["EDGE_INGESTION"].includes(stage) ? "active" : "success"}
+              />
+
+              <StepItem
+                title="2. Decentralized Anchoring"
+                desc="Synapse SDK pins ciphertext to Filecoin"
+                cid={cid}
+                status={["IDLE", "EDGE_INGESTION"].includes(stage) ? "pending" : stage === "ANCHORING_FILECOIN" ? "active" : "success"}
+              />
+
+              <StepItem
+                title="3. Event Orchestration"
+                desc="OpenServ Hub routes task to Knowledge Sub-Agent"
+                status={["IDLE", "EDGE_INGESTION", "ANCHORING_FILECOIN"].includes(stage) ? "pending" : stage === "ORCHESTRATION" ? "active" : "success"}
+              />
+
+              <StepItem
+                title="4. Private Compute Engine"
+                desc="Aether ephemeral environment processes data"
+                status={["IDLE", "EDGE_INGESTION", "ANCHORING_FILECOIN", "ORCHESTRATION"].includes(stage) ? "pending" : stage === "PRIVATE_COMPUTE" ? "active" : "success"}
+              />
+
+            </div>
+
+            {/* Results Output */}
+            <div className={`mt-8 pt-6 border-t border-slate-700/50 transition-all duration-500 ${stage === "COMPLETED" ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none hidden'}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">DePIN Agent Output</h3>
+                {stage === "COMPLETED" && (
+                  <button onClick={resetAll} className="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30 transition-all">
+                    Upload Another
+                  </button>
+                )}
+              </div>
+              <div className="bg-[#0f1423] rounded-lg p-5 font-mono text-sm border border-slate-800 relative group overflow-hidden">
+                <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 left-0"></div>
+                <pre className="text-green-400 whitespace-pre-wrap word-break">
+                  {result ? JSON.stringify(result, null, 2) : ""}
+                </pre>
+              </div>
+            </div>
+
+          </section>
+        </main>
+      </div>
     </div>
   );
+}
+
+function StepItem({ title, desc, status, cid }: { title: string, desc: string, status: "pending" | "active" | "success", cid?: string }) {
+  return (
+    <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+      {/* Icon Node */}
+      <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#030712] shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 transition-colors duration-500
+        ${status === 'active' ? 'bg-purple-500 outline outline-4 outline-purple-500/20' : status === 'success' ? 'bg-blue-500' : 'bg-slate-800'}`}>
+        {status === 'success' ? (
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        ) : status === 'active' ? (
+          <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></div>
+        ) : (
+          <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border transition-all duration-300
+        ${status === 'active' ? 'bg-slate-800/80 border-purple-500/50 shadow-[0_0_15px_rgba(147,51,234,0.1)]' : status === 'success' ? 'bg-slate-800/30 border-slate-700/80 opacity-80' : 'bg-slate-800/20 border-slate-800 opacity-40'}
+      `}>
+        <h4 className={`font-semibold text-sm mb-1 ${status === 'active' ? 'text-purple-300' : 'text-slate-300'}`}>{title}</h4>
+        <p className="text-xs text-slate-500">{desc}</p>
+        {cid && (
+          <div className="mt-2 pt-2 border-t border-slate-700/50 flex items-center gap-1">
+            <span className="text-[10px] uppercase text-slate-500 font-bold bg-slate-800 px-1.5 py-0.5 rounded">CID</span>
+            <span className="text-xs text-blue-400 font-mono truncate">{cid}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

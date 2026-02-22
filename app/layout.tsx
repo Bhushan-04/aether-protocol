@@ -9,10 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "nocap-ai — Decentralized News Truth Machine",
+  title: "Aether Protocol — The Self-Sovereign AI Agency",
   description:
-    "Autonomous fact-checking pipeline that captures, verifies, archives, and broadcasts news claims. Powered by decentralized truth.",
+    "A decentralized zero-knowledge intelligence framework that enables autonomous AI agents to process highly sensitive data privately.",
 };
+
+import { Web3Provider } from "@/lib/web3-provider";
 
 export default function RootLayout({
   children,
@@ -22,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased`}>
-        {children}
+        <Web3Provider>
+          {children}
+        </Web3Provider>
       </body>
     </html>
   );

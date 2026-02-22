@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
         const payload = `
 ${divider}
-📡 NOCAP-AI BROADCAST
+📡 AETHER PROTOCOL BROADCAST
 ${divider}
 🕐 Timestamp: ${timestamp}
 🆔 Claim ID:  ${claim.id}
@@ -96,7 +96,7 @@ ${divider}
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        content: `**New nocap-ai Broadcast**\n\`\`\`text\n${payload}\n\`\`\``
+                        content: `**New Aether Protocol Broadcast**\n\`\`\`text\n${payload}\n\`\`\``
                     }),
                 });
                 console.log("Successfully sent Discord notification.");
